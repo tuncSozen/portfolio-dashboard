@@ -691,9 +691,10 @@ def create_usd_index_chart(portfolio_data=None):
         )
         
         # Create title with USD percentage if available
-        title_text = 'USD Index Performance (2024)'
         if usd_percentage is not None:
-            title_text += f'<br><span style="font-size:12px; color:#9ca3af;">Portfolio USD Exposure: {usd_percentage:.1f}%</span>'
+            title_text = f'Portfolio USD Exposure <span style="color:#ef4444; font-weight:bold;">{usd_percentage:.1f}%</span>'
+        else:
+            title_text = 'Portfolio USD Exposure'
         
         fig.update_layout(
             title={
