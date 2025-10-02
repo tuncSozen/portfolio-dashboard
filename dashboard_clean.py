@@ -1296,11 +1296,11 @@ def create_risk_page(bank_data):
         html.Div([
             html.H1("Risk Analysis", className="page-title"),
             
-            # Risk Analysis Grid - 2 rows by 3 columns with wider containers
+            # Risk Analysis Grid - 2x2 layout with wide rectangular charts
             html.Div([
-                # Row 1 - Three containers side by side
+                # Row 1 - Two containers side by side
                 html.Div([
-                    # Container 1: Reinvestment Risk
+                    # Container 1: Reinvestment Risk (Top Left)
                     html.Div([
                         html.H4("Reinvestment Risk", className="chart-title"),
                         # Filter buttons
@@ -1363,53 +1363,37 @@ def create_risk_page(bank_data):
                             id='reinvestment-risk-chart',
                             config={'displayModeBar': False}
                         )
-                    ], className="summary-container", style={"flex": "1", "marginRight": "15px", "minWidth": "400px"}),
+                    ], className="summary-container", style={"flex": "1", "marginRight": "15px", "minWidth": "600px", "height": "450px"}),
                     
-                    # Container 2: Concentration Risk
+                    # Container 2: Concentration Risk (Top Right)
                     html.Div([
                         html.H4("Concentration Risk", className="chart-title"),
                         dcc.Graph(
                             id='concentration-risk-chart',
                             config={'displayModeBar': False}
                         )
-                    ], className="summary-container", style={"flex": "1", "marginRight": "15px", "minWidth": "400px"}),
-                    
-                    # Container 3: Currency Risk
+                    ], className="summary-container", style={"flex": "1", "minWidth": "600px", "height": "450px"})
+                ], className="summary-row", style={"display": "flex", "marginBottom": "20px", "gap": "15px"}),
+                
+                # Row 2 - Two containers side by side
+                html.Div([
+                    # Container 3: Currency Risk (Bottom Left)
                     html.Div([
                         html.H4("Currency Risk", className="chart-title"),
                         dcc.Graph(
                             id='currency-risk-chart',
                             config={'displayModeBar': False}
                         )
-                    ], className="summary-container", style={"flex": "1", "minWidth": "400px"})
-                ], className="summary-row", style={"display": "flex", "marginBottom": "20px", "gap": "15px"}),
-                
-                # Row 2 - Three containers side by side
-                html.Div([
-                    # Container 4: Credit Risk
+                    ], className="summary-container", style={"flex": "1", "marginRight": "15px", "minWidth": "600px", "height": "450px"}),
+                    
+                    # Container 4: Credit Risk (Bottom Right)
                     html.Div([
                         html.H4("Credit Risk", className="chart-title"),
                         dcc.Graph(
                             id='credit-risk-chart',
                             config={'displayModeBar': False}
                         )
-                    ], className="summary-container", style={"flex": "1", "marginRight": "15px", "minWidth": "400px"}),
-                    
-                    # Container 5: Liquidity Risk
-                    html.Div([
-                        html.H4("Liquidity Risk", className="chart-title"),
-                        html.P("Liquidity risk analysis will be implemented here", 
-                               className="chart-subtitle", 
-                               style={"color": "#9ca3af", "fontSize": "14px", "textAlign": "center", "marginTop": "50px"})
-                    ], className="summary-container", style={"flex": "1", "marginRight": "15px", "minWidth": "400px"}),
-                    
-                    # Container 6: Market Risk
-                    html.Div([
-                        html.H4("Market Risk", className="chart-title"),
-                        html.P("Market risk analysis will be implemented here", 
-                               className="chart-subtitle", 
-                               style={"color": "#9ca3af", "fontSize": "14px", "textAlign": "center", "marginTop": "50px"})
-                    ], className="summary-container", style={"flex": "1", "minWidth": "400px"})
+                    ], className="summary-container", style={"flex": "1", "minWidth": "600px", "height": "450px"})
                 ], className="summary-row", style={"display": "flex", "gap": "15px"})
             ], className="summary-grid", style={"maxWidth": "1400px", "margin": "0 auto"})
         ], className="page")
