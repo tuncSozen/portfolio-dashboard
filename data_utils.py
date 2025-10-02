@@ -623,76 +623,81 @@ def get_evolution_data(evolution_data, bank_name):
     return evolution_df
 
 
-def create_currency_risk_chart(portfolio_data):
+def create_usd_index_chart():
     """
-    Create a donut chart showing portfolio breakdown by currency
-    
-    Parameters:
-    portfolio_data (dict): Dictionary containing portfolio data for each bank
+    Create a line chart showing USD Index performance from beginning of 2024
     
     Returns:
-    plotly.graph_objects.Figure: Donut chart figure
+    plotly.graph_objects.Figure: Line chart figure
     """
     try:
-        # Combine all portfolio data from all banks
-        all_holdings = []
-        for bank in ['bbva', 'ubs', 'lo']:
-            bank_name = bank.upper()
-            holdings = portfolio_data[bank].copy()
-            holdings['Bank'] = bank_name
-            all_holdings.append(holdings)
-        
-        combined_holdings = pd.concat(all_holdings, ignore_index=True)
-        
-        if combined_holdings.empty:
-            print("No portfolio data found")
+        # Load benchmarks data
+        benchmarks_df = load_benchmarks()
+        if benchmarks_df is None:
+            print("No benchmarks data available")
             return None
         
-        # Group by currency and sum values
-        currency_data = combined_holdings.groupby('Currency')['Value_USD'].sum().reset_index()
+        # Filter data from beginning of 2024
+        benchmarks_df['Date'] = pd.to_datetime(benchmarks_df['Date'])
+        usd_data = benchmarks_df[benchmarks_df['Date'] >= '2024-01-01'].copy()
         
-        if currency_data.empty:
-            print("No currency data found")
+        if usd_data.empty:
+            print("No USD Index data available from 2024")
             return None
         
-        # Get color mapping for currencies
-        color_mapping = get_color_mapping('Currency')
+        # Create the line chart
+        fig = go.Figure()
         
-        # Create donut chart with same style as portfolio allocation
-        fig = px.pie(
-            currency_data, 
-            values='Value_USD', 
-            names='Currency', 
-            hole=0.6,
-            color='Currency',
-            color_discrete_map=color_mapping
-        ).update_layout(
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
-            font_color='#e5e5e5',
-            height=400,
-            showlegend=True,
-            legend=dict(
-                orientation="h",
-                yanchor="top",
-                y=-0.1,
-                xanchor="center",
-                x=0.5
-            )
-        ).update_traces(
-            textposition='inside', 
-            textinfo='percent+label', 
-            marker=dict(line=dict(width=2, color='#0a0a0a'))
+        fig.add_trace(go.Scatter(
+            x=usd_data['Date'],
+            y=usd_data['USD Index'],
+            mode='lines',
+            name='USD Index',
+            line=dict(color='#3b82f6', width=3),
+            hovertemplate='<b>USD Index</b><br>Date: %{x}<br>Value: %{y:.2f}<extra></extra>'
+        ))
+        
+        # Add horizontal line at 100 (neutral level)
+        fig.add_hline(
+            y=100,
+            line_dash="dash",
+            line_color="#6b7280",
+            annotation_text="Neutral Level (100)",
+            annotation_position="top right"
         )
         
-        print(f"Currency risk chart created with {len(currency_data)} currencies")
-        print(f"Currencies: {currency_data['Currency'].tolist()}")
-        print(f"Total portfolio value: ${currency_data['Value_USD'].sum():,.0f}")
+        fig.update_layout(
+            title={
+                'text': 'USD Index Performance (2024)',
+                'x': 0.5,
+                'xanchor': 'center',
+                'font': {'size': 16, 'color': '#e5e5e5'}
+            },
+            xaxis_title='Date',
+            yaxis_title='USD Index Value',
+            font=dict(color='#e5e5e5'),
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            xaxis=dict(
+                gridcolor='#374151',
+                showgrid=True,
+                color='#e5e5e5'
+            ),
+            yaxis=dict(
+                gridcolor='#374151',
+                showgrid=True,
+                color='#e5e5e5'
+            ),
+            height=400,
+            margin=dict(l=50, r=50, t=60, b=50)
+        )
+        
+        print(f"USD Index chart created with {len(usd_data)} data points from {usd_data['Date'].min()} to {usd_data['Date'].max()}")
         
         return fig
         
     except Exception as e:
-        print(f"Error creating currency risk chart: {e}")
+        print(f"Error creating USD Index chart: {e}")
         return None
 
 

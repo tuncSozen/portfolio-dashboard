@@ -35,7 +35,7 @@ from data_utils import (load_data, process_data, create_pie_chart, create_twrr_c
                        create_portfolio_evolution_chart, get_top_holdings, get_portfolio_holdings_data,
                        get_bank_portfolio_data, process_portfolio_data, get_evolution_data,
                        load_benchmarks, create_benchmark_ytd, create_benchmark_summary_chart,
-                       create_bonds_stacked_chart, create_currency_risk_chart, create_credit_risk_chart,
+                       create_bonds_stacked_chart, create_usd_index_chart, create_credit_risk_chart,
                        create_reinvestment_risk_chart, create_concentration_risk_chart)
 
 # Load and process data
@@ -1374,9 +1374,9 @@ def create_risk_page(bank_data):
                         )
                     ], className="summary-container", style={"flex": "1", "marginRight": "15px", "minWidth": "400px"}),
                     
-                    # Container 3: Currency Risk
+                    # Container 3: USD Index
                     html.Div([
-                        html.H4("Currency Risk", className="chart-title"),
+                        html.H4("USD Index", className="chart-title"),
                         dcc.Graph(
                             id='currency-risk-chart',
                             config={'displayModeBar': False}
@@ -1537,19 +1537,19 @@ def update_reinvestment_risk_chart(risk_clicks, bank_clicks, currency_clicks, la
         return error_chart, inactive_style, inactive_style, inactive_style
 
 
-# Callback for currency risk chart
+# Callback for USD Index chart
 @app.callback(
     Output('currency-risk-chart', 'figure'),
     [Input('risk-btn', 'n_clicks')]
 )
-def update_currency_risk_chart(risk_clicks):
-    """Update currency risk chart on Risk Analysis page load"""
+def update_usd_index_chart(risk_clicks):
+    """Update USD Index chart on Risk Analysis page load"""
     try:
-        # Create the currency risk chart
-        chart = create_currency_risk_chart(data['portfolio'])
+        # Create the USD Index chart
+        chart = create_usd_index_chart()
         if chart is None:
             return go.Figure().add_annotation(
-                text="No currency data available for currency risk analysis",
+                text="No USD Index data available for analysis",
                 x=0.5, y=0.5, showarrow=False,
                 font=dict(size=16, color='#e5e5e5')
             ).update_layout(
@@ -1562,9 +1562,9 @@ def update_currency_risk_chart(risk_clicks):
         return chart
         
     except Exception as e:
-        print(f"Error updating currency risk chart: {e}")
+        print(f"Error updating USD Index chart: {e}")
         return go.Figure().add_annotation(
-            text=f"Error loading currency risk data: {str(e)}",
+            text=f"Error loading USD Index data: {str(e)}",
             x=0.5, y=0.5, showarrow=False,
             font=dict(size=16, color='#e5e5e5')
         ).update_layout(
