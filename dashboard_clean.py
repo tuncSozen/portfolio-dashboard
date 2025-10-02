@@ -18,7 +18,11 @@ if sys.version_info >= (3, 12):
     sys.modules['distutils.version'] = setuptools.version
     sys.modules['distutils.errors'] = setuptools.errors
 
-import dash_auth
+try:
+    import dash_auth
+except ImportError:
+    print("Warning: dash_auth not available. Authentication will be disabled.")
+    dash_auth = None
 from data_utils import (load_data, process_data, create_pie_chart, create_twrr_chart, 
                        get_color_mapping, create_bank_comparison_chart, 
                        create_portfolio_evolution_chart, get_top_holdings, get_portfolio_holdings_data,
@@ -43,10 +47,14 @@ VALID_USERNAME_PASSWORD_PAIRS = {
     os.environ.get('DASH_USERNAME_2', 'user'): os.environ.get('DASH_PASSWORD_2', 'user123')
 }
 
-auth = dash_auth.BasicAuth(
-    app,
-    VALID_USERNAME_PASSWORD_PAIRS
-)
+if dash_auth:
+    auth = dash_auth.BasicAuth(
+        app,
+        VALID_USERNAME_PASSWORD_PAIRS
+    )
+else:
+    print("Authentication disabled - dash_auth not available")
+    auth = None
 
 # Define the layout
 app.layout = html.Div([
