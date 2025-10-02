@@ -1,6 +1,3 @@
-# Python version compatibility
-python-version=3.11
-
 # Core dependencies
 dash==2.14.2
 plotly==5.17.0

@@ -8,6 +8,16 @@ from dash import dcc, html, Input, Output, callback, dash_table
 import plotly.graph_objects as go
 import pandas as pd
 import os
+import sys
+
+# Handle distutils compatibility for Python 3.12+
+if sys.version_info >= (3, 12):
+    import setuptools
+    sys.modules['distutils'] = setuptools
+    sys.modules['distutils.util'] = setuptools.util
+    sys.modules['distutils.version'] = setuptools.version
+    sys.modules['distutils.errors'] = setuptools.errors
+
 import dash_auth
 from data_utils import (load_data, process_data, create_pie_chart, create_twrr_chart, 
                        get_color_mapping, create_bank_comparison_chart, 

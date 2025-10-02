@@ -7,6 +7,15 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
+import sys
+
+# Handle distutils compatibility for Python 3.12+
+if sys.version_info >= (3, 12):
+    import setuptools
+    sys.modules['distutils'] = setuptools
+    sys.modules['distutils.util'] = setuptools.util
+    sys.modules['distutils.version'] = setuptools.version
+    sys.modules['distutils.errors'] = setuptools.errors
 
 
 def load_data():
