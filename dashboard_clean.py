@@ -256,7 +256,7 @@ def update_benchmark_comparison_chart(summary_clicks, banks_clicks, holdings_cli
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
                 font_color='#e5e5e5',
-                height=400
+                height=350
             )
     
     try:
@@ -271,7 +271,7 @@ def update_benchmark_comparison_chart(summary_clicks, banks_clicks, holdings_cli
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
                 font_color='#e5e5e5',
-                height=400
+                height=350
             )
         
         # Create YTD data
@@ -285,7 +285,7 @@ def update_benchmark_comparison_chart(summary_clicks, banks_clicks, holdings_cli
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
                 font_color='#e5e5e5',
-                height=400
+                height=350
             )
         
         # Check if TWRR data is available
@@ -298,7 +298,7 @@ def update_benchmark_comparison_chart(summary_clicks, banks_clicks, holdings_cli
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
                 font_color='#e5e5e5',
-                height=400
+                height=350
             )
         
         # Create the benchmark summary chart
@@ -312,7 +312,7 @@ def update_benchmark_comparison_chart(summary_clicks, banks_clicks, holdings_cli
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
                 font_color='#e5e5e5',
-                height=400
+                height=350
             )
         
         return chart
@@ -1363,7 +1363,7 @@ def create_risk_page(bank_data):
                             id='reinvestment-risk-chart',
                             config={'displayModeBar': False}
                         )
-                    ], className="summary-container", style={"flex": "1", "marginRight": "15px", "minWidth": "600px", "height": "450px"}),
+                    ], className="summary-container", style={"flex": "1", "marginRight": "15px", "minWidth": "600px", "height": "450px", "display": "flex", "flexDirection": "column"}),
                     
                     # Container 2: Concentration Risk (Top Right)
                     html.Div([
@@ -1372,7 +1372,7 @@ def create_risk_page(bank_data):
                             id='concentration-risk-chart',
                             config={'displayModeBar': False}
                         )
-                    ], className="summary-container", style={"flex": "1", "minWidth": "600px", "height": "450px"})
+                    ], className="summary-container", style={"flex": "1", "minWidth": "600px", "height": "450px", "display": "flex", "flexDirection": "column"})
                 ], className="summary-row", style={"display": "flex", "marginBottom": "20px", "gap": "15px"}),
                 
                 # Row 2 - Two containers side by side
@@ -1384,7 +1384,7 @@ def create_risk_page(bank_data):
                             id='currency-risk-chart',
                             config={'displayModeBar': False}
                         )
-                    ], className="summary-container", style={"flex": "1", "marginRight": "15px", "minWidth": "600px", "height": "450px"}),
+                    ], className="summary-container", style={"flex": "1", "marginRight": "15px", "minWidth": "600px", "height": "450px", "display": "flex", "flexDirection": "column"}),
                     
                     # Container 4: Credit Risk (Bottom Right)
                     html.Div([
@@ -1393,7 +1393,7 @@ def create_risk_page(bank_data):
                             id='credit-risk-chart',
                             config={'displayModeBar': False}
                         )
-                    ], className="summary-container", style={"flex": "1", "minWidth": "600px", "height": "450px"})
+                    ], className="summary-container", style={"flex": "1", "minWidth": "600px", "height": "450px", "display": "flex", "flexDirection": "column"})
                 ], className="summary-row", style={"display": "flex", "gap": "15px"})
             ], className="summary-grid", style={"maxWidth": "1400px", "margin": "0 auto"})
         ], className="page")
@@ -1440,7 +1440,7 @@ def update_reinvestment_risk_chart(risk_clicks, bank_clicks, currency_clicks, la
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
                 font_color='#e5e5e5',
-                height=500
+                height=350
             )
         
         # Define button styles
@@ -1540,7 +1540,7 @@ def update_currency_risk_chart(risk_clicks):
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
                 font_color='#e5e5e5',
-                height=400
+                height=350
             )
         
         return chart
@@ -1580,7 +1580,7 @@ def update_concentration_risk_chart(risk_clicks):
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
                 font_color='#e5e5e5',
-                height=500
+                height=350
             )
         
         # Create the concentration risk chart
@@ -1595,7 +1595,7 @@ def update_concentration_risk_chart(risk_clicks):
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
                 font_color='#e5e5e5',
-                height=500
+                height=350
             )
         
         print("Chart created successfully, returning to dashboard")
@@ -1636,7 +1636,7 @@ def update_credit_risk_chart(risk_clicks):
                 plot_bgcolor='rgba(0,0,0,0)',
                 paper_bgcolor='rgba(0,0,0,0)',
                 font_color='#e5e5e5',
-                height=400
+                height=350
             )
         
         return chart

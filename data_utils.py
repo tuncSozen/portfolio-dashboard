@@ -718,7 +718,7 @@ def create_usd_index_chart(portfolio_data=None):
                 showgrid=True,
                 color='#e5e5e5'
             ),
-            height=400,
+            height=350,
             margin=dict(l=50, r=50, t=80, b=50)
         )
         
@@ -813,7 +813,7 @@ def create_bonds_stacked_chart(portfolio_data):
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
             font_color='#e5e5e5',
-            height=500,
+            height=350,
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
@@ -907,7 +907,7 @@ def create_benchmark_summary_chart(cumulative_returns, twrr_data):
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
             font_color='#e5e5e5',
-            height=400,
+            height=350,
             xaxis_title="Benchmark",
             yaxis_title="Cumulative Return (%)",
             title={
@@ -988,7 +988,7 @@ def create_credit_risk_chart(portfolio_data):
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
             font_color='#e5e5e5',
-            height=400,
+            height=350,
             legend=dict(
                 orientation="h",
                 yanchor="top",
@@ -1095,7 +1095,7 @@ def create_reinvestment_risk_chart(portfolio_data, filter_by='Bank'):
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
             font_color='#e5e5e5',
-            height=500,
+            height=350,
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
@@ -1224,7 +1224,7 @@ def create_concentration_risk_chart(portfolio_data):
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
             font_color='#e5e5e5',
-            height=500,
+            height=350,
             margin=dict(l=20, r=20, t=60, b=20)
         )
         
