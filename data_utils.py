@@ -818,7 +818,7 @@ def create_benchmark_summary_chart(cumulative_returns, twrr_data):
         final_returns = {}
         
         # Define benchmarks to exclude
-        excluded_benchmarks = ['US10Y', 'USD Index', 'Nasdaq']
+        excluded_benchmarks = ['US10Y', 'USD Index', 'Nasdaq', '40/60']
         
         # Get benchmark returns (last row of cumulative returns)
         for col in cumulative_returns.columns:
