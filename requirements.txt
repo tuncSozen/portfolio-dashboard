@@ -1,3 +1,7 @@
+# Python version compatibility
+python-version=3.11
+
+# Core dependencies
 dash==2.14.2
 plotly==5.17.0
 pandas==2.1.4
@@ -5,3 +9,4 @@ numpy==1.24.3
 openpyxl==3.1.2
 dash-auth==2.0.0
 gunicorn==21.2.0
+setuptools==68.2.2
