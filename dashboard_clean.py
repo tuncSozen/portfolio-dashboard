@@ -1664,6 +1664,9 @@ def update_credit_risk_chart(risk_clicks):
         )
 
 
+# Expose the server for Gunicorn
+server = app.server
+
 if __name__ == '__main__':
     # Railway-ready configuration
     debug_mode = os.environ.get('DEBUG', 'False').lower() == 'true'
