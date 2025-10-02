@@ -1,0 +1,36 @@
+I want to build a dashboard for my portfolio using python and plotly.
+
+There are 3 excel files onthis folder:
+- portfolio.xlsx which contains description, value and other info on each asset
+- twrr.xlsx which contains 3 sheets (one for each bank) showing monthly return performance
+- evolutionPL.xlsx which contains a column for each bank showing a simple cash flow statement
+
+Here are some bulletpoints:
+
+Design & Layout
+- create an css file for layout
+- use plotly
+- use dark mode
+- there will be a sidebar on the left side
+- 2 tabs on the sidebar named Summary and Banks
+- create 9 containers for each page (3 rows by 3 columns)
+
+Portfolio file
+- Have a look at the contents of the portfolio.xlsx.
+- Create 3 dataframes from portfolio by filtering Bank column with each bank name i.e. BBVA, UBS and LO
+
+TWRR file
+- Have a look at the contents of the twrr.xlsx.
+- Create 3 dataframes from twrr (one for each bank) by loading excel file with the sheet named after a bank
+
+Banks tab
+- On banks tab, each vertical column will be representing one of the banks (lets call these Bank Columns)
+- 1st row of each column will be a donut chart - use Type and Value_USD columns
+- Second row of each column will be a line plot with x-axis Date time-series and Y-axis Cum. TWRR column
+- LEave the 3rd row containers blank for now
+
+Summary tab
+- Leave this blank for now
+
+
+Let me create the new page with 6 containers in a 2x3 grid, where the first container has 4 smaller metric containers in a 2x2 layout.
