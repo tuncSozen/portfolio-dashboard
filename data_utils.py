@@ -1187,8 +1187,8 @@ def create_concentration_risk_chart(portfolio_data):
                 path=['Label'],
                 values='Value_USD',
                 color='Value_USD',
-                color_continuous_scale='Viridis',
-                title='Portfolio Concentration by Label'
+                color_continuous_scale='Oranges',
+                title='Concentration (excluding Fixed Income)'
             )
             
             print("Treemap created, updating traces...")
@@ -1196,7 +1196,7 @@ def create_concentration_risk_chart(portfolio_data):
             # Update traces for better styling
             fig.update_traces(
                 textinfo="label+value+percent parent",
-                textfont=dict(size=14, color='white'),
+                textfont=dict(size=14, color='black'),
                 hovertemplate='<b>%{label}</b><br>Value: $%{value:,.0f}<br>Percentage: %{percentParent:.1f}%<extra></extra>'
             )
             
@@ -1210,8 +1210,8 @@ def create_concentration_risk_chart(portfolio_data):
                 x='Label',
                 y='Value_USD',
                 color='Value_USD',
-                color_continuous_scale='Viridis',
-                title='Portfolio Concentration by Label (Bar Chart)'
+                color_continuous_scale='Oranges',
+                title='Concentration (excluding Fixed Income) - Bar Chart'
             )
             
             fig.update_traces(
@@ -1220,7 +1220,7 @@ def create_concentration_risk_chart(portfolio_data):
         
         # Update layout
         fig.update_layout(
-            title={'text': 'Portfolio Concentration by Label', 'x': 0.5, 'xanchor': 'center', 'font': {'size': 16, 'color': '#e5e5e5'}},
+            title={'text': 'Concentration (excluding Fixed Income)', 'x': 0.5, 'xanchor': 'center', 'font': {'size': 16, 'color': '#e5e5e5'}},
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
             font_color='#e5e5e5',
