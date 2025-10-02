@@ -12,11 +12,18 @@ import sys
 
 # Handle distutils compatibility for Python 3.12+
 if sys.version_info >= (3, 12):
-    import setuptools
-    sys.modules['distutils'] = setuptools
-    sys.modules['distutils.util'] = setuptools.util
-    sys.modules['distutils.version'] = setuptools.version
-    sys.modules['distutils.errors'] = setuptools.errors
+    try:
+        import setuptools
+        # Only map the modules that exist
+        sys.modules['distutils'] = setuptools
+        if hasattr(setuptools, 'util'):
+            sys.modules['distutils.util'] = setuptools.util
+        if hasattr(setuptools, 'version'):
+            sys.modules['distutils.version'] = setuptools.version
+        if hasattr(setuptools, 'errors'):
+            sys.modules['distutils.errors'] = setuptools.errors
+    except ImportError:
+        print("Warning: setuptools not available, distutils compatibility disabled")
 
 try:
     import dash_auth
