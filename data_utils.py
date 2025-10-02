@@ -623,9 +623,13 @@ def get_evolution_data(evolution_data, bank_name):
     return evolution_df
 
 
-def create_usd_index_chart():
+def create_usd_index_chart(portfolio_data=None):
     """
     Create a line chart showing USD Index performance from beginning of 2024
+    with portfolio USD percentage information
+    
+    Parameters:
+    portfolio_data (dict): Dictionary containing portfolio data for each bank
     
     Returns:
     plotly.graph_objects.Figure: Line chart figure
@@ -644,6 +648,26 @@ def create_usd_index_chart():
         if usd_data.empty:
             print("No USD Index data available from 2024")
             return None
+        
+        # Calculate USD percentage of portfolio if portfolio data is provided
+        usd_percentage = None
+        if portfolio_data:
+            try:
+                # Combine all portfolio data from all banks
+                all_holdings = []
+                for bank in ['bbva', 'ubs', 'lo']:
+                    if bank in portfolio_data:
+                        holdings = portfolio_data[bank].copy()
+                        all_holdings.append(holdings)
+                
+                if all_holdings:
+                    combined_holdings = pd.concat(all_holdings, ignore_index=True)
+                    total_value = combined_holdings['Value_USD'].sum()
+                    usd_value = combined_holdings[combined_holdings['Currency'] == 'USD']['Value_USD'].sum()
+                    usd_percentage = (usd_value / total_value * 100) if total_value > 0 else 0
+                    print(f"Portfolio USD percentage: {usd_percentage:.1f}%")
+            except Exception as e:
+                print(f"Error calculating USD percentage: {e}")
         
         # Create the line chart
         fig = go.Figure()
@@ -666,9 +690,14 @@ def create_usd_index_chart():
             annotation_position="top right"
         )
         
+        # Create title with USD percentage if available
+        title_text = 'USD Index Performance (2024)'
+        if usd_percentage is not None:
+            title_text += f'<br><span style="font-size:12px; color:#9ca3af;">Portfolio USD Exposure: {usd_percentage:.1f}%</span>'
+        
         fig.update_layout(
             title={
-                'text': 'USD Index Performance (2024)',
+                'text': title_text,
                 'x': 0.5,
                 'xanchor': 'center',
                 'font': {'size': 16, 'color': '#e5e5e5'}
@@ -689,7 +718,7 @@ def create_usd_index_chart():
                 color='#e5e5e5'
             ),
             height=400,
-            margin=dict(l=50, r=50, t=60, b=50)
+            margin=dict(l=50, r=50, t=80, b=50)
         )
         
         print(f"USD Index chart created with {len(usd_data)} data points from {usd_data['Date'].min()} to {usd_data['Date'].max()}")

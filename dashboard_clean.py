@@ -1374,9 +1374,9 @@ def create_risk_page(bank_data):
                         )
                     ], className="summary-container", style={"flex": "1", "marginRight": "15px", "minWidth": "400px"}),
                     
-                    # Container 3: USD Index
+                    # Container 3: Currency Risk
                     html.Div([
-                        html.H4("USD Index", className="chart-title"),
+                        html.H4("Currency Risk", className="chart-title"),
                         dcc.Graph(
                             id='currency-risk-chart',
                             config={'displayModeBar': False}
@@ -1537,19 +1537,19 @@ def update_reinvestment_risk_chart(risk_clicks, bank_clicks, currency_clicks, la
         return error_chart, inactive_style, inactive_style, inactive_style
 
 
-# Callback for USD Index chart
+# Callback for Currency Risk chart (USD Index with portfolio USD percentage)
 @app.callback(
     Output('currency-risk-chart', 'figure'),
     [Input('risk-btn', 'n_clicks')]
 )
-def update_usd_index_chart(risk_clicks):
-    """Update USD Index chart on Risk Analysis page load"""
+def update_currency_risk_chart(risk_clicks):
+    """Update Currency Risk chart on Risk Analysis page load"""
     try:
-        # Create the USD Index chart
-        chart = create_usd_index_chart()
+        # Create the USD Index chart with portfolio data
+        chart = create_usd_index_chart(data['portfolio'])
         if chart is None:
             return go.Figure().add_annotation(
-                text="No USD Index data available for analysis",
+                text="No USD Index data available for currency risk analysis",
                 x=0.5, y=0.5, showarrow=False,
                 font=dict(size=16, color='#e5e5e5')
             ).update_layout(
@@ -1562,9 +1562,9 @@ def update_usd_index_chart(risk_clicks):
         return chart
         
     except Exception as e:
-        print(f"Error updating USD Index chart: {e}")
+        print(f"Error updating Currency Risk chart: {e}")
         return go.Figure().add_annotation(
-            text=f"Error loading USD Index data: {str(e)}",
+            text=f"Error loading Currency Risk data: {str(e)}",
             x=0.5, y=0.5, showarrow=False,
             font=dict(size=16, color='#e5e5e5')
         ).update_layout(
