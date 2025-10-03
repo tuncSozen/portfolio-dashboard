@@ -477,7 +477,7 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
     .main-bank-row {
         grid-template-columns: 1fr 1fr;
         gap: 16px;
@@ -488,7 +488,7 @@ body {
     }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
     .main-bank-row {
         grid-template-columns: 1fr;
         gap: 12px;
@@ -601,7 +601,7 @@ body {
 }
 
 /* Responsive Design for Summary Page */
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
     .summary-row {
         grid-template-columns: 1fr 1fr;
         gap: 16px;
@@ -612,7 +612,7 @@ body {
     }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
     .summary-row {
         grid-template-columns: 1fr;
         gap: 12px;
