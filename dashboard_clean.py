@@ -36,7 +36,7 @@ from data_utils import (load_data, process_data, create_pie_chart, create_twrr_c
                        get_bank_portfolio_data, process_portfolio_data, get_evolution_data,
                        load_benchmarks, create_benchmark_ytd, create_benchmark_summary_chart,
                        create_bonds_stacked_chart, create_usd_index_chart, create_credit_risk_chart,
-                       create_reinvestment_risk_chart, create_concentration_risk_chart)
+                       create_reinvestment_risk_chart, create_concentration_risk_chart, create_detailed_allocation_chart)
 
 # Load and process data
 raw_data = load_data()
@@ -75,7 +75,8 @@ app.layout = html.Div([
                     html.Button("📊 Summary", id="summary-btn", n_clicks=0, className="nav-link active"),
                     html.Button("🏦 Bank Analysis", id="banks-btn", n_clicks=0, className="nav-link"),
                     html.Button("📋 Portfolio Holdings", id="holdings-btn", n_clicks=0, className="nav-link"),
-                    html.Button("⚠️ Risk Analysis", id="risk-btn", n_clicks=0, className="nav-link")
+                    html.Button("⚠️ Risk Analysis", id="risk-btn", n_clicks=0, className="nav-link"),
+                    html.Button("🔥 Allocation Heat Map", id="allocation-btn", n_clicks=0, className="nav-link")
                 ], className="nav-menu")
             ])
         ], className="sidebar"),
@@ -336,18 +337,20 @@ def update_benchmark_comparison_chart(summary_clicks, banks_clicks, holdings_cli
      Output("summary-btn", "className"),
      Output("banks-btn", "className"),
      Output("holdings-btn", "className"),
-     Output("risk-btn", "className")],
+     Output("risk-btn", "className"),
+     Output("allocation-btn", "className")],
     [Input("summary-btn", "n_clicks"),
      Input("banks-btn", "n_clicks"),
      Input("holdings-btn", "n_clicks"),
-     Input("risk-btn", "n_clicks")]
+     Input("risk-btn", "n_clicks"),
+     Input("allocation-btn", "n_clicks")]
 )
-def update_main_content(summary_clicks, banks_clicks, holdings_clicks, risk_clicks):
+def update_main_content(summary_clicks, banks_clicks, holdings_clicks, risk_clicks, allocation_clicks):
     if data is None:
         return (html.Div([
             html.H1("Portfolio Dashboard", className="page-title"),
             html.P("Error loading data. Please check your Excel files.", className="error-message")
-        ]), "nav-link", "nav-link", "nav-link", "nav-link")
+        ]), "nav-link", "nav-link", "nav-link", "nav-link", "nav-link")
     
     # Determine which page to show
     ctx = dash.callback_context
@@ -363,6 +366,8 @@ def update_main_content(summary_clicks, banks_clicks, holdings_clicks, risk_clic
             page = "holdings"
         elif button_id == 'risk-btn':
             page = "risk"
+        elif button_id == 'allocation-btn':
+            page = "allocation"
         else:
             page = "summary"  # Default fallback
     
@@ -374,16 +379,19 @@ def update_main_content(summary_clicks, banks_clicks, holdings_clicks, risk_clic
     
     if page == "summary":
         return (create_summary_page(bank_data, twrr_data, evolution_data), 
-                "nav-link active", "nav-link", "nav-link", "nav-link")
+                "nav-link active", "nav-link", "nav-link", "nav-link", "nav-link")
     elif page == "banks":
         return (create_banks_page(bank_data, twrr_data, evolution_data), 
-                "nav-link", "nav-link active", "nav-link", "nav-link")
+                "nav-link", "nav-link active", "nav-link", "nav-link", "nav-link")
     elif page == "holdings":
         return (create_holdings_page(bank_data), 
-                "nav-link", "nav-link", "nav-link active", "nav-link")
+                "nav-link", "nav-link", "nav-link active", "nav-link", "nav-link")
+    elif page == "allocation":
+        return (create_detailed_allocation_page(bank_data), 
+                "nav-link", "nav-link", "nav-link", "nav-link", "nav-link active")
     else:  # risk page
         return (create_risk_page(bank_data), 
-                "nav-link", "nav-link", "nav-link", "nav-link active")
+                "nav-link", "nav-link", "nav-link", "nav-link active", "nav-link")
 
 def create_summary_page(bank_data, twrr_data, evolution_data):
     """Create the Summary page layout"""
@@ -1290,6 +1298,74 @@ def create_holdings_page(bank_data):
     ])
 
 
+def create_detailed_allocation_page(bank_data):
+    """Create the Allocation Heat Map page layout"""
+    return html.Div([
+        html.Div([
+            # Page Header
+            html.Div([
+                html.H1("Allocation Heat Map", className="page-title"),
+                html.P("Complete portfolio allocation breakdown by type, subtype, and issuer", className="page-subtitle"),
+            ], className="page-header"),
+            
+            # Allocation Heat Map Chart - Wide Rectangle
+            html.Div([
+                html.H4("Portfolio Allocation Heat Map", className="chart-title"),
+                # Value/Performance filter buttons
+                html.Div([
+                    html.Div([
+                        html.Label("Filter by:", style={"color": "#e5e5e5", "fontSize": "14px", "marginRight": "15px"}),
+                        html.Button(
+                            "Total Value",
+                            id="allocation-filter-value",
+                            n_clicks=1,
+                            className="filter-button active",
+                            style={
+                                "marginRight": "6px",
+                                "padding": "6px 12px",
+                                "backgroundColor": "#3b82f6",
+                                "color": "white",
+                                "border": "none",
+                                "borderRadius": "4px",
+                                "cursor": "pointer",
+                                "fontSize": "12px",
+                                "fontWeight": "500"
+                            }
+                        ),
+                        html.Button(
+                            "Performance",
+                            id="allocation-filter-performance",
+                            n_clicks=0,
+                            className="filter-button",
+                            style={
+                                "padding": "6px 12px",
+                                "backgroundColor": "#374151",
+                                "color": "#e5e5e5",
+                                "border": "1px solid #4b5563",
+                                "borderRadius": "4px",
+                                "cursor": "pointer",
+                                "fontSize": "12px",
+                                "fontWeight": "500"
+                            }
+                        )
+                    ], style={"display": "flex", "alignItems": "center", "justifyContent": "center", "marginBottom": "20px"})
+                ], style={"marginBottom": "15px"}),
+                dcc.Graph(
+                    id='detailed-allocation-chart',
+                    config={'displayModeBar': False},
+                    style={'height': '700px'}
+                )
+            ], className="summary-container", style={
+                "width": "1500px", 
+                "maxWidth": "1500px", 
+                "margin": "0 auto",
+                "minHeight": "800px",
+                "display": "block"
+            })
+        ], style={"padding": "30px 0", "margin": "0 auto", "width": "100%", "maxWidth": "none"})
+    ])
+
+
 def create_risk_page(bank_data):
     """Create the Risk Analysis page layout"""
     return html.Div([
@@ -1302,8 +1378,16 @@ def create_risk_page(bank_data):
                 html.Div([
                     # Container 1: Reinvestment Risk (Top Left)
                     html.Div([
-                        html.H4("Reinvestment Risk", className="chart-title"),
-                        # Filter buttons
+                        html.Div([
+                            html.H4("Reinvestment Risk", className="chart-title", style={"textAlign": "left", "marginBottom": "5px"}),
+                            html.P("Bonds Portfolio by Maturity Year", style={"color": "#a0a0a0", "fontSize": "12px", "margin": "0", "textAlign": "left"})
+                        ], style={"marginBottom": "15px"}),
+                        dcc.Graph(
+                            id='reinvestment-risk-chart',
+                            config={'displayModeBar': False},
+                            style={'margin': '0 auto', 'display': 'block', 'flex': '1', 'height': '100%'}
+                        ),
+                        # Filter buttons - moved to bottom and centered
                         html.Div([
                             html.Div([
                                 html.Label("Filter by:", style={"color": "#e5e5e5", "fontSize": "14px", "marginRight": "15px"}),
@@ -1313,14 +1397,14 @@ def create_risk_page(bank_data):
                                     n_clicks=1,
                                     className="filter-button active",
                                     style={
-                                        "marginRight": "8px",
-                                        "padding": "8px 16px",
+                                        "marginRight": "6px",
+                                        "padding": "4px 8px",
                                         "backgroundColor": "#3b82f6",
                                         "color": "white",
                                         "border": "none",
-                                        "borderRadius": "6px",
+                                        "borderRadius": "4px",
                                         "cursor": "pointer",
-                                        "fontSize": "14px",
+                                        "fontSize": "11px",
                                         "fontWeight": "500"
                                     }
                                 ),
@@ -1330,14 +1414,14 @@ def create_risk_page(bank_data):
                                     n_clicks=0,
                                     className="filter-button",
                                     style={
-                                        "marginRight": "8px",
-                                        "padding": "8px 16px",
+                                        "marginRight": "6px",
+                                        "padding": "4px 8px",
                                         "backgroundColor": "#374151",
                                         "color": "#e5e5e5",
                                         "border": "1px solid #4b5563",
-                                        "borderRadius": "6px",
+                                        "borderRadius": "4px",
                                         "cursor": "pointer",
-                                        "fontSize": "14px",
+                                        "fontSize": "11px",
                                         "fontWeight": "500"
                                     }
                                 ),
@@ -1347,56 +1431,64 @@ def create_risk_page(bank_data):
                                     n_clicks=0,
                                     className="filter-button",
                                     style={
-                                        "padding": "8px 16px",
+                                        "padding": "4px 8px",
                                         "backgroundColor": "#374151",
                                         "color": "#e5e5e5",
                                         "border": "1px solid #4b5563",
-                                        "borderRadius": "6px",
+                                        "borderRadius": "4px",
                                         "cursor": "pointer",
-                                        "fontSize": "14px",
+                                        "fontSize": "11px",
                                         "fontWeight": "500"
                                     }
                                 )
-                            ], style={"display": "flex", "alignItems": "center", "marginBottom": "15px"})
-                        ], style={"marginBottom": "10px"}),
-                        dcc.Graph(
-                            id='reinvestment-risk-chart',
-                            config={'displayModeBar': False}
-                        )
-                    ], className="summary-container", style={"flex": "1", "marginRight": "15px", "minWidth": "600px", "height": "450px", "display": "flex", "flexDirection": "column"}),
+                            ], style={"display": "flex", "alignItems": "center", "justifyContent": "center", "marginTop": "15px"})
+                        ], style={"marginTop": "10px"})
+                    ], className="summary-container", style={"flex": "1", "marginRight": "15px", "minWidth": "600px", "height": "450px", "display": "flex", "flexDirection": "column", "justifyContent": "center"}),
                     
                     # Container 2: Concentration Risk (Top Right)
                     html.Div([
-                        html.H4("Concentration Risk", className="chart-title"),
+                        html.Div([
+                            html.H4("Concentration Risk", className="chart-title", style={"textAlign": "left", "marginBottom": "5px"}),
+                            html.P("Tech Concentration (non-FI)", style={"color": "#a0a0a0", "fontSize": "12px", "margin": "0", "textAlign": "left"})
+                        ], style={"marginBottom": "15px"}),
                         dcc.Graph(
                             id='concentration-risk-chart',
-                            config={'displayModeBar': False}
+                            config={'displayModeBar': False},
+                            style={'height': '100%'}
                         )
-                    ], className="summary-container", style={"flex": "1", "minWidth": "600px", "height": "450px", "display": "flex", "flexDirection": "column"})
+                    ], className="summary-container", style={"flex": "1", "minWidth": "600px", "height": "450px", "display": "flex", "flexDirection": "column", "justifyContent": "center"})
                 ], className="summary-row", style={"display": "flex", "marginBottom": "20px", "gap": "15px"}),
                 
                 # Row 2 - Two containers side by side
                 html.Div([
                     # Container 3: Currency Risk (Bottom Left)
                     html.Div([
-                        html.H4("Currency Risk", className="chart-title"),
+                        html.Div([
+                            html.H4("Currency Risk", className="chart-title", style={"textAlign": "left", "marginBottom": "5px"}),
+                            html.P("Portfolio USD Exposure", style={"color": "#a0a0a0", "fontSize": "12px", "margin": "0", "textAlign": "left"})
+                        ], style={"marginBottom": "15px"}),
                         dcc.Graph(
                             id='currency-risk-chart',
-                            config={'displayModeBar': False}
+                            config={'displayModeBar': False},
+                            style={'height': '100%'}
                         )
-                    ], className="summary-container", style={"flex": "1", "marginRight": "15px", "minWidth": "600px", "height": "450px", "display": "flex", "flexDirection": "column"}),
+                    ], className="summary-container", style={"flex": "1", "marginRight": "15px", "minWidth": "600px", "height": "450px", "display": "flex", "flexDirection": "column", "justifyContent": "center"}),
                     
                     # Container 4: Credit Risk (Bottom Right)
                     html.Div([
-                        html.H4("Credit Risk", className="chart-title"),
+                        html.Div([
+                            html.H4("Credit Risk", className="chart-title", style={"textAlign": "left", "marginBottom": "5px"}),
+                            html.P("Fixed Income Turkiye Exposure", style={"color": "#a0a0a0", "fontSize": "12px", "margin": "0", "textAlign": "left"})
+                        ], style={"marginBottom": "15px"}),
                         dcc.Graph(
                             id='credit-risk-chart',
-                            config={'displayModeBar': False}
+                            config={'displayModeBar': False},
+                            style={'height': '100%'}
                         )
-                    ], className="summary-container", style={"flex": "1", "minWidth": "600px", "height": "450px", "display": "flex", "flexDirection": "column"})
+                    ], className="summary-container", style={"flex": "1", "minWidth": "600px", "height": "450px", "display": "flex", "flexDirection": "column", "justifyContent": "center"})
                 ], className="summary-row", style={"display": "flex", "gap": "15px"})
-            ], className="summary-grid", style={"maxWidth": "1400px", "margin": "0 auto"})
-        ], className="page")
+            ], className="summary-grid risk-analysis-grid", style={"maxWidth": "1400px", "margin": "0 auto"})
+        ], className="page risk-analysis-page")
     ])
 
 
@@ -1445,26 +1537,26 @@ def update_reinvestment_risk_chart(risk_clicks, bank_clicks, currency_clicks, la
         
         # Define button styles
         active_style = {
-            "marginRight": "8px",
-            "padding": "8px 16px",
+            "marginRight": "6px",
+            "padding": "4px 8px",
             "backgroundColor": "#3b82f6",
             "color": "white",
             "border": "none",
-            "borderRadius": "6px",
+            "borderRadius": "4px",
             "cursor": "pointer",
-            "fontSize": "14px",
+            "fontSize": "11px",
             "fontWeight": "500"
         }
         
         inactive_style = {
-            "marginRight": "8px",
-            "padding": "8px 16px",
+            "marginRight": "6px",
+            "padding": "4px 8px",
             "backgroundColor": "#374151",
             "color": "#e5e5e5",
             "border": "1px solid #4b5563",
-            "borderRadius": "6px",
+            "borderRadius": "4px",
             "cursor": "pointer",
-            "fontSize": "14px",
+            "fontSize": "11px",
             "fontWeight": "500"
         }
         
@@ -1507,14 +1599,14 @@ def update_reinvestment_risk_chart(risk_clicks, bank_clicks, currency_clicks, la
         
         # Return error chart with default button styles
         inactive_style = {
-            "marginRight": "8px",
-            "padding": "8px 16px",
+            "marginRight": "6px",
+            "padding": "4px 8px",
             "backgroundColor": "#374151",
             "color": "#e5e5e5",
             "border": "1px solid #4b5563",
-            "borderRadius": "6px",
+            "borderRadius": "4px",
             "cursor": "pointer",
-            "fontSize": "14px",
+            "fontSize": "11px",
             "fontWeight": "500"
         }
         
@@ -1653,6 +1745,122 @@ def update_credit_risk_chart(risk_clicks):
             font_color='#e5e5e5',
             height=400
         )
+
+
+# Callback for detailed allocation chart
+@app.callback(
+    [Output('detailed-allocation-chart', 'figure'),
+     Output('allocation-filter-value', 'style'),
+     Output('allocation-filter-performance', 'style')],
+    [Input('allocation-btn', 'n_clicks'),
+     Input('allocation-filter-value', 'n_clicks'),
+     Input('allocation-filter-performance', 'n_clicks')]
+)
+def update_detailed_allocation_chart(allocation_clicks, value_clicks, performance_clicks):
+    """Update detailed allocation chart on Detailed Allocation page load or filter change"""
+    try:
+        # Determine which button was clicked
+        ctx = dash.callback_context
+        if not ctx.triggered:
+            # Initial load - default to 'Value'
+            filter_type = 'Value'
+            print("No button triggered - using default 'Value'")
+        else:
+            button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+            print(f"Button clicked: {button_id}")  # Debug print
+            print(f"All clicks - value: {value_clicks}, performance: {performance_clicks}")
+            
+            if 'allocation-filter-value' in button_id:
+                filter_type = 'Value'
+            elif 'allocation-filter-performance' in button_id:
+                filter_type = 'Performance'
+            elif 'allocation-btn' in button_id:
+                filter_type = 'Value'  # Page load
+            else:
+                filter_type = 'Value'
+                print(f"Unknown button ID: {button_id}")
+        
+        print(f"Filter type selected: {filter_type}")  # Debug print
+        
+        # Create the detailed allocation chart with filter
+        chart = create_detailed_allocation_chart(data['portfolio'], filter_type)
+        if chart is None:
+            return (go.Figure().add_annotation(
+                text="No portfolio data available for detailed allocation analysis",
+                x=0.5, y=0.5, showarrow=False,
+                font=dict(size=16, color='#e5e5e5')
+            ).update_layout(
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                font_color='#e5e5e5',
+                height=700
+            ), {}, {}, {}, {})
+        
+        # Define button styles
+        active_style = {
+            "marginRight": "6px",
+            "padding": "6px 12px",
+            "backgroundColor": "#3b82f6",
+            "color": "white",
+            "border": "none",
+            "borderRadius": "4px",
+            "cursor": "pointer",
+            "fontSize": "12px",
+            "fontWeight": "500"
+        }
+        
+        inactive_style = {
+            "marginRight": "6px",
+            "padding": "6px 12px",
+            "backgroundColor": "#374151",
+            "color": "#e5e5e5",
+            "border": "1px solid #4b5563",
+            "borderRadius": "4px",
+            "cursor": "pointer",
+            "fontSize": "12px",
+            "fontWeight": "500"
+        }
+        
+        # Set button styles based on active filter
+        if filter_type == 'Value':
+            value_style = active_style.copy()
+            performance_style = inactive_style.copy()
+        else:  # Performance
+            value_style = inactive_style.copy()
+            performance_style = active_style.copy()
+        
+        # Remove margin from last button
+        performance_style.pop('marginRight', None)
+        
+        return chart, value_style, performance_style
+        
+    except Exception as e:
+        print(f"Error updating detailed allocation chart: {e}")
+        error_chart = go.Figure().add_annotation(
+            text=f"Error loading detailed allocation data: {str(e)}",
+            x=0.5, y=0.5, showarrow=False,
+            font=dict(size=16, color='#e5e5e5')
+        ).update_layout(
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font_color='#e5e5e5',
+            height=700
+        )
+        
+        # Return error chart with default button styles
+        inactive_style = {
+            "marginRight": "6px",
+            "padding": "6px 12px",
+            "backgroundColor": "#374151",
+            "color": "#e5e5e5",
+            "border": "1px solid #4b5563",
+            "borderRadius": "4px",
+            "cursor": "pointer",
+            "fontSize": "12px",
+            "fontWeight": "500"
+        }
+        
+        return error_chart, inactive_style, inactive_style
 
 
 # Expose the server for Gunicorn

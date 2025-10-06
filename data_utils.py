@@ -698,7 +698,7 @@ def create_usd_index_chart(portfolio_data=None):
         
         fig.update_layout(
             title={
-                'text': title_text,
+                'text': '',
                 'x': 0.5,
                 'xanchor': 'center',
                 'font': {'size': 16, 'color': '#e5e5e5'}
@@ -884,21 +884,28 @@ def create_benchmark_summary_chart(cumulative_returns, twrr_data):
             else:
                 colors.append('#3b82f6')  # Blue for all other benchmarks
         
-        # Create scatter plot
+        # Create bar chart
+        # Only show text for Portfolio, empty for others
+        text_values = []
+        for i, benchmark in enumerate(summary_df['Benchmark']):
+            if benchmark == 'Portfolio':
+                text_values.append(f"{summary_df['Return'].iloc[i]:.2f}%")
+            else:
+                text_values.append("")
+        
         fig = go.Figure(data=[
-            go.Scatter(
+            go.Bar(
                 x=summary_df['Benchmark'],
                 y=summary_df['Return'],
-                mode='markers+text',
                 marker=dict(
                     color=colors,
-                    size=20,
-                    line=dict(width=2, color='#0a0a0a')
+                    line=dict(width=1, color='#0a0a0a')
                 ),
-                text=[f"{val:.2f}%" for val in summary_df['Return']],
-                textposition='top center',
+                text=text_values,
+                textposition='outside',
                 textfont=dict(size=12, color='#e5e5e5'),
-                hovertemplate='<b>%{x}</b><br>Return: %{y:.2f}%<extra></extra>'
+                hovertemplate='<b>%{x}</b><br>Return: %{y:.2f}%<extra></extra>',
+                width=0.4  # Narrow bars
             )
         ])
         
@@ -919,7 +926,7 @@ def create_benchmark_summary_chart(cumulative_returns, twrr_data):
             xaxis=dict(
                 tickangle=45,
                 tickfont=dict(size=12),
-                showgrid=True,
+                showgrid=False,
                 gridcolor='#374151',
                 gridwidth=1
             ),
@@ -930,7 +937,7 @@ def create_benchmark_summary_chart(cumulative_returns, twrr_data):
                 gridcolor='#374151',
                 gridwidth=1
             ),
-            margin=dict(l=60, r=40, t=60, b=80),
+            margin=dict(l=60, r=40, t=100, b=80),
             showlegend=False
         )
         
@@ -968,6 +975,17 @@ def create_credit_risk_chart(portfolio_data):
         total_value = credit_data['Value_USD'].sum()
         credit_data['Percentage'] = (credit_data['Value_USD'] / total_value * 100).round(1)
         
+        # Get TUR value for display
+        tur_value = credit_data[credit_data['Label'] == 'TUR']['Value_USD'].iloc[0] if 'TUR' in credit_data['Label'].values else 0
+        
+        # Define colors - blue for all labels except TUR which is red
+        colors = []
+        for label in credit_data['Label']:
+            if label == 'TUR':
+                colors.append('#d62728')  # Red for TUR (same as Other label)
+            else:
+                colors.append('#1f77b4')  # Blue for all other labels (same as IG label)
+        
         # Create donut chart
         fig = go.Figure(data=[go.Pie(
             labels=credit_data['Label'],
@@ -977,14 +995,17 @@ def create_credit_risk_chart(portfolio_data):
             textposition='inside',
             textfont=dict(size=12, color='white'),
             marker=dict(
-                colors=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'],
+                colors=colors,
                 line=dict(color='#000000', width=2)
             ),
             hovertemplate='<b>%{label}</b><br>Value: $%{value:,.0f}<br>Percentage: %{percent}<extra></extra>'
         )])
         
+        # Create title with TUR value
+        title_text = f'Fixed Income Turkiye Exposure: <span style="color: #ff0000;">${tur_value:,.0f}</span>'
+        
         fig.update_layout(
-            title={'text': 'Bonds Credit Rating Breakdown', 'x': 0.5, 'xanchor': 'center', 'font': {'size': 16, 'color': '#e5e5e5'}},
+            title={'text': '', 'x': 0.5, 'xanchor': 'center', 'font': {'size': 16, 'color': '#e5e5e5'}},
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
             font_color='#e5e5e5',
@@ -1088,7 +1109,7 @@ def create_reinvestment_risk_chart(portfolio_data, filter_by='Bank'):
         
         # Update layout
         fig.update_layout(
-            title={'text': f'Bonds Portfolio by Maturity Year ({filter_by})', 'x': 0.5, 'xanchor': 'center', 'font': {'size': 16, 'color': '#e5e5e5'}},
+            title={'text': '', 'x': 0.5, 'xanchor': 'center', 'font': {'size': 16, 'color': '#e5e5e5'}},
             xaxis_title="Maturity Year",
             yaxis_title="Value (USD)",
             barmode='stack',
@@ -1112,6 +1133,236 @@ def create_reinvestment_risk_chart(portfolio_data, filter_by='Bank'):
         
     except Exception as e:
         print(f"Error creating reinvestment risk chart: {e}")
+        return None
+
+
+def create_detailed_allocation_chart(portfolio_data, filter_type='Value'):
+    """Create a treemap chart showing detailed portfolio allocation (excluding only negative Cash)"""
+    try:
+        print("Starting detailed allocation chart creation...")
+        
+        # Combine all holdings from all banks
+        all_holdings = []
+        for bank in ['bbva', 'ubs', 'lo']:
+            if bank in portfolio_data:
+                holdings = portfolio_data[bank].copy()
+                holdings['Bank'] = bank.upper()
+                all_holdings.append(holdings)
+                print(f"Added {len(holdings)} holdings from {bank}")
+            else:
+                print(f"No data found for bank: {bank}")
+        
+        if not all_holdings:
+            print("No holdings data found")
+            return None
+            
+        combined_holdings = pd.concat(all_holdings, ignore_index=True)
+        print(f"Combined holdings: {len(combined_holdings)} rows")
+        print(f"Available columns: {combined_holdings.columns.tolist()}")
+        print(f"Available types: {combined_holdings['Type'].unique()}")
+        
+        # Filter out only negative Cash (liabilities)
+        filtered_data = combined_holdings[
+            ~((combined_holdings['Type'] == 'Cash') & (combined_holdings['Value_USD'] < 0))
+        ].copy()
+        
+        # No type filtering - show all data (excluding only negative Cash)
+        print(f"After filtering (excluding negative Cash): {len(filtered_data)} rows")
+        
+        print(f"Remaining types: {filtered_data['Type'].unique()}")
+        
+        if filtered_data.empty:
+            print("No data after filtering")
+            return None
+        
+        # Check if Label column exists and has data
+        if 'Label' not in filtered_data.columns:
+            print("Label column not found")
+            return None
+            
+        # Remove rows with missing labels
+        filtered_data = filtered_data.dropna(subset=['Label'])
+        print(f"After removing missing labels: {len(filtered_data)} rows")
+        print(f"Unique labels: {filtered_data['Label'].unique()}")
+        
+        if filtered_data.empty:
+            print("No data after removing missing labels")
+            return None
+        
+        # Use Type -> Subtype -> Label -> Issuer hierarchy for all filters
+        group_cols = ['Type', 'Subtype', 'Label', 'Issuer']
+        path_cols = ['Type', 'Subtype', 'Label', 'Issuer']
+        filtered_data['Type_Subtype_Label_Issuer'] = (
+            filtered_data['Type'].fillna('Unknown') + ' - ' + 
+            filtered_data['Subtype'].fillna('Unknown') + ' - ' + 
+            filtered_data['Label'].fillna('Unknown') + ' - ' + 
+            filtered_data['Issuer'].fillna('Unknown')
+        )
+        
+        # Group by determined columns and sum values
+        if 'Change_pct' in filtered_data.columns:
+            if filter_type == 'Performance':
+                # For Performance mode, use actual Change_pct values (not weighted averages)
+                # If multiple entries exist for same issuer, use the most recent or first value
+                label_data = filtered_data.groupby(group_cols + ['Type_Subtype_Label_Issuer']).apply(
+                    lambda x: pd.Series({
+                        'Value_USD': x['Value_USD'].sum(),
+                        'Change_pct': x['Change_pct'].mean() if len(x) > 1 else x['Change_pct'].iloc[0] if len(x) > 0 else 0
+                    })
+                ).reset_index()
+            else:
+                # For Value mode, calculate weighted average of Change_pct using Value_USD as weights
+                label_data = filtered_data.groupby(group_cols + ['Type_Subtype_Label_Issuer']).apply(
+                    lambda x: pd.Series({
+                        'Value_USD': x['Value_USD'].sum(),
+                        'Change_pct': (x['Change_pct'] * x['Value_USD']).sum() / x['Value_USD'].sum() if x['Value_USD'].sum() > 0 else 0
+                    })
+                ).reset_index()
+        else:
+            # Fallback if Change_pct column doesn't exist
+            label_data = filtered_data.groupby(group_cols + ['Type_Subtype_Label_Issuer'])['Value_USD'].sum().reset_index()
+            label_data['Change_pct'] = 0
+        
+        # Determine what to use for box sizes based on filter_type
+        if filter_type == 'Performance':
+            # Check if Change_pct has any non-zero values
+            if label_data['Change_pct'].abs().sum() == 0:
+                print("Warning: All Change_pct values are zero, falling back to Value_USD for box sizes")
+                label_data['Box_Size'] = label_data['Value_USD']
+                color_column = 'Change_pct'  # Still use Change_pct for coloring
+            else:
+                # Use Change_pct for box sizes (absolute value to handle negative performance)
+                # Add a small minimum value to ensure treemap renders properly
+                label_data['Box_Size'] = abs(label_data['Change_pct']) + 0.01
+                color_column = 'Change_pct'  # Use actual Change_pct for coloring
+            
+            size_column = 'Box_Size'
+            print(f"Performance mode - Box sizes range: {label_data['Box_Size'].min():.4f} to {label_data['Box_Size'].max():.4f}")
+            print(f"Performance mode - Change_pct range: {label_data['Change_pct'].min():.4f} to {label_data['Change_pct'].max():.4f}")
+            print(f"Performance mode - Sample Change_pct values: {label_data['Change_pct'].head().tolist()}")
+        else:  # Value
+            # Use Value_USD for box sizes
+            label_data['Box_Size'] = label_data['Value_USD']
+            size_column = 'Box_Size'
+            color_column = 'Value_USD'  # Use Value_USD for coloring
+            print(f"Value mode - Box sizes range: {label_data['Box_Size'].min():.2f} to {label_data['Box_Size'].max():.2f}")
+        
+        label_data = label_data.sort_values('Value_USD', ascending=False)
+        
+        print(f"Type-Subtype-Label data: {len(label_data)} unique combinations")
+        print(f"Type-Subtype-Label data:\n{label_data}")
+        
+        if label_data.empty:
+            print("No type-subtype-label data after grouping")
+            return None
+        
+        # Create treemap chart using plotly express with hierarchical path
+        print(f"Creating treemap with data:\n{label_data}")
+        print(f"Using size column: {size_column}, color column: {color_column}")
+        print(f"Path columns: {path_cols}")
+        
+        try:
+            if filter_type == 'Performance':
+                # Center the color scale at zero for Performance mode
+                max_abs_value = max(abs(label_data['Change_pct'].min()), abs(label_data['Change_pct'].max()))
+                fig = px.treemap(
+                    label_data,
+                    path=path_cols,
+                    values=size_column,
+                    color=color_column,
+                    color_continuous_scale='RdYlGn',
+                    range_color=[-max_abs_value, max_abs_value],
+                    title=''
+                )
+            else:
+                fig = px.treemap(
+                    label_data,
+                    path=path_cols,
+                    values=size_column,
+                    color=color_column,
+                    color_continuous_scale='Oranges',
+                    title=''
+                )
+            print(f"Treemap created successfully for {filter_type} mode")
+            
+            print("Treemap created, updating traces...")
+            
+            # Update traces for better styling
+            if filter_type == 'Performance':
+                hovertemplate = '<b>%{label}</b><br>Value: $%{customdata[0]:,.0f}<br>Performance: %{value:.2f}%<br>Percentage: %{percentParent:.1f}%<extra></extra>'
+                customdata = list(zip(label_data['Value_USD'], label_data['Change_pct']))
+            else:  # Value
+                hovertemplate = '<b>%{label}</b><br>Value: $%{value:,.0f}<br>Percentage: %{percentParent:.1f}%<br>Change: %{customdata:.2f}%<extra></extra>'
+                customdata = label_data['Change_pct']
+            
+            fig.update_traces(
+                textinfo="label+value+percent parent",
+                textfont=dict(size=14, color='black'),
+                hovertemplate=hovertemplate,
+                customdata=customdata
+            )
+            
+            # Color scale is now set directly in plot creation
+            
+        except Exception as treemap_error:
+            print(f"Treemap creation failed: {treemap_error}")
+            print("Creating fallback bar chart...")
+            
+            # Fallback to bar chart
+            x_column = 'Type_Subtype_Label_Issuer'
+            if filter_type == 'Performance':
+                # Center the color scale at zero for Performance mode
+                max_abs_value = max(abs(label_data['Change_pct'].min()), abs(label_data['Change_pct'].max()))
+                fig = px.bar(
+                    label_data,
+                    x=x_column,
+                    y=size_column,
+                    color=color_column,
+                    color_continuous_scale='RdYlGn',
+                    range_color=[-max_abs_value, max_abs_value],
+                    title=''
+                )
+            else:
+                fig = px.bar(
+                    label_data,
+                    x=x_column,
+                    y=size_column,
+                    color=color_column,
+                    color_continuous_scale='Oranges',
+                    title=''
+                )
+            
+            if filter_type == 'Performance':
+                hovertemplate = '<b>%{x}</b><br>Value: $%{customdata[0]:,.0f}<br>Performance: %{y:.2f}%<extra></extra>'
+                customdata = list(zip(label_data['Value_USD'], label_data['Change_pct']))
+            else:  # Value
+                hovertemplate = '<b>%{x}</b><br>Value: $%{y:,.0f}<br>Change: %{customdata:.2f}%<extra></extra>'
+                customdata = label_data['Change_pct']
+            
+            fig.update_traces(
+                hovertemplate=hovertemplate,
+                customdata=customdata
+            )
+            
+            # Color scale is now set directly in plot creation
+        
+        # Update layout
+        fig.update_layout(
+            title={'text': '', 'x': 0.5, 'xanchor': 'center', 'font': {'size': 16, 'color': '#e5e5e5'}},
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font_color='#e5e5e5',
+            height=700,
+            margin=dict(l=20, r=20, t=20, b=20)
+        )
+        
+        print("Detailed allocation chart created successfully")
+        return fig
+        
+    except Exception as e:
+        print(f"Error creating detailed allocation chart: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
@@ -1167,28 +1418,50 @@ def create_concentration_risk_chart(portfolio_data):
             print("No data after removing missing labels")
             return None
         
-        # Group by Label and sum values
-        label_data = filtered_data.groupby('Label')['Value_USD'].sum().reset_index()
+        # Group by Label and Issuer, then sum values and calculate weighted average Change_pct
+        # First create a combined label that includes both Label and Issuer
+        filtered_data['Label_Issuer'] = filtered_data['Label'] + ' - ' + filtered_data['Issuer'].fillna('Unknown')
+        
+        # Group by Label and Issuer, sum Value_USD and calculate weighted average Change_pct
+        if 'Change_pct' in filtered_data.columns:
+            # Calculate weighted average of Change_pct using Value_USD as weights
+            label_data = filtered_data.groupby(['Label', 'Issuer', 'Label_Issuer']).apply(
+                lambda x: pd.Series({
+                    'Value_USD': x['Value_USD'].sum(),
+                    'Change_pct': (x['Change_pct'] * x['Value_USD']).sum() / x['Value_USD'].sum() if x['Value_USD'].sum() > 0 else 0
+                })
+            ).reset_index()
+        else:
+            # Fallback if Change_pct column doesn't exist
+            label_data = filtered_data.groupby(['Label', 'Issuer', 'Label_Issuer'])['Value_USD'].sum().reset_index()
+            label_data['Change_pct'] = 0
+        
         label_data = label_data.sort_values('Value_USD', ascending=False)
         
-        print(f"Label data: {len(label_data)} unique labels")
+        print(f"Label data: {len(label_data)} unique label-issuer combinations")
         print(f"Label data:\n{label_data}")
         
         if label_data.empty:
             print("No label data after grouping")
             return None
         
-        # Create treemap chart using plotly express
+        # Calculate Tech percentage
+        total_value = label_data['Value_USD'].sum()
+        tech_data = label_data[label_data['Label'].str.contains('Tech', case=False, na=False)]
+        tech_percentage = (tech_data['Value_USD'].sum() / total_value * 100) if total_value > 0 else 0
+        tech_percentage_rounded = round(tech_percentage, 1)
+        
+        # Create treemap chart using plotly express with hierarchical path
         print(f"Creating treemap with data:\n{label_data}")
         
         try:
             fig = px.treemap(
                 label_data,
-                path=['Label'],
+                path=['Label', 'Issuer'],
                 values='Value_USD',
                 color='Value_USD',
                 color_continuous_scale='Oranges',
-                title='Concentration (excluding Fixed Income)'
+                title=f'Tech Concentration (non-FI): <span style="color: red;">{tech_percentage_rounded}%</span>'
             )
             
             print("Treemap created, updating traces...")
@@ -1197,7 +1470,8 @@ def create_concentration_risk_chart(portfolio_data):
             fig.update_traces(
                 textinfo="label+value+percent parent",
                 textfont=dict(size=14, color='black'),
-                hovertemplate='<b>%{label}</b><br>Value: $%{value:,.0f}<br>Percentage: %{percentParent:.1f}%<extra></extra>'
+                hovertemplate='<b>%{label}</b><br>Value: $%{value:,.0f}<br>Percentage: %{percentParent:.1f}%<br>Change: %{customdata:.2f}%<extra></extra>',
+                customdata=label_data['Change_pct']
             )
             
         except Exception as treemap_error:
@@ -1207,20 +1481,21 @@ def create_concentration_risk_chart(portfolio_data):
             # Fallback to bar chart
             fig = px.bar(
                 label_data,
-                x='Label',
+                x='Label_Issuer',
                 y='Value_USD',
                 color='Value_USD',
                 color_continuous_scale='Oranges',
-                title='Concentration (excluding Fixed Income) - Bar Chart'
+                title=f'Tech Concentration (non-FI): <span style="color: red;">{tech_percentage_rounded}%</span> - Bar Chart'
             )
             
             fig.update_traces(
-                hovertemplate='<b>%{x}</b><br>Value: $%{y:,.0f}<extra></extra>'
+                hovertemplate='<b>%{x}</b><br>Value: $%{y:,.0f}<br>Change: %{customdata:.2f}%<extra></extra>',
+                customdata=label_data['Change_pct']
             )
         
         # Update layout
         fig.update_layout(
-            title={'text': 'Concentration (excluding Fixed Income)', 'x': 0.5, 'xanchor': 'center', 'font': {'size': 16, 'color': '#e5e5e5'}},
+            title={'text': '', 'x': 0.5, 'xanchor': 'center', 'font': {'size': 16, 'color': '#e5e5e5'}},
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
             font_color='#e5e5e5',
